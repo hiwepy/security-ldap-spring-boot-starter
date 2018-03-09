@@ -23,7 +23,7 @@ import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.boot.biz.authentication.ajax.AjaxAwareAuthenticationFailureHandler;
 import org.springframework.security.boot.biz.authentication.ajax.AjaxAwareAuthenticationSuccessHandler;
-import org.springframework.security.boot.biz.authentication.ajax.AjaxUsernamePasswordAuthenticationFilter;
+import org.springframework.security.boot.biz.authentication.ajax.AjaxAwareLoginProcessingFilter;
 import org.springframework.security.boot.utils.StringUtils;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper;
@@ -147,7 +147,7 @@ public class SecurityLdapWebFilterConfiguration implements ApplicationContextAwa
     
     @Bean
 	@ConditionalOnMissingBean
-	public AjaxUsernamePasswordAuthenticationFilter jwtAjaxLoginProcessingFilter(AuthenticationFailureHandler failureHandler,
+	public AjaxAwareLoginProcessingFilter jwtAjaxLoginProcessingFilter(AuthenticationFailureHandler failureHandler,
 			AuthenticationManager authenticationManager, ApplicationEventPublisher publisher,
 			AuthenticationDetailsSource<HttpServletRequest, ?> authenticationDetailsSource,
 			AuthenticationSuccessHandler successHandler, RememberMeServices rememberMeServices,
