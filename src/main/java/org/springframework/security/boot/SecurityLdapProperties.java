@@ -3,6 +3,11 @@ package org.springframework.security.boot;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.security.boot.ldap.SecurityActiveDirectoryLdapProperties;
+import org.springframework.security.boot.ldap.SecurityLdapPopulatorProperties;
+import org.springframework.security.boot.ldap.authentication.AuthoritiesMapperPolicy;
+import org.springframework.security.boot.ldap.authentication.DirContextPolicy;
 
 @ConfigurationProperties(prefix = SecurityLdapProperties.PREFIX)
 public class SecurityLdapProperties {
@@ -45,7 +50,7 @@ public class SecurityLdapProperties {
 	private Map<String, Object> baseEnvironmentProperties;
 
 	private boolean cacheEnvironmentProperties = true;
-	
+	private boolean hideUserNotFoundExceptions = true;
 	/** FilterBasedLdapUserSearch */
 	
 	/** Context name to search in, relative to the base of the configured ContextSource. */
@@ -80,6 +85,30 @@ public class SecurityLdapProperties {
 	private boolean searchSubtree;
 	/** The time to wait before the search fails (in milliseconds); the default is zero, meaning forever. */
 	private int searchTimeLimit;
+	
+	private DirContextPolicy dirContextPolicy = DirContextPolicy.SIMPLE;
+	private AuthoritiesMapperPolicy authoritiesMapperPolicy = AuthoritiesMapperPolicy.NONE;
+	
+	@NestedConfigurationProperty
+	private SecurityLdapPopulatorProperties populator = new SecurityLdapPopulatorProperties();
+	
+	@NestedConfigurationProperty
+	private SecurityActiveDirectoryLdapProperties activeDirectory = new SecurityActiveDirectoryLdapProperties();
+	
+	
+	public SecurityLdapPopulatorProperties getPopulator() {
+		return populator;
+	}
+	public void setPopulator(SecurityLdapPopulatorProperties populator) {
+		this.populator = populator;
+	}
+	public SecurityActiveDirectoryLdapProperties getActiveDirectory() {
+		return activeDirectory;
+	}
+	public void setActiveDirectory(SecurityActiveDirectoryLdapProperties activeDirectory) {
+		this.activeDirectory = activeDirectory;
+	}
+	 
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -199,6 +228,25 @@ public class SecurityLdapProperties {
 	}
 	public void setSearchTimeLimit(int searchTimeLimit) {
 		this.searchTimeLimit = searchTimeLimit;
+	}
+	public DirContextPolicy getDirContextPolicy() {
+		return dirContextPolicy;
+	}
+	public void setDirContextPolicy(DirContextPolicy dirContextPolicy) {
+		this.dirContextPolicy = dirContextPolicy;
+	}
+	 
+	public AuthoritiesMapperPolicy getAuthoritiesMapperPolicy() {
+		return authoritiesMapperPolicy;
+	}
+	public void setAuthoritiesMapperPolicy(AuthoritiesMapperPolicy authoritiesMapperPolicy) {
+		this.authoritiesMapperPolicy = authoritiesMapperPolicy;
+	}
+	public boolean isHideUserNotFoundExceptions() {
+		return hideUserNotFoundExceptions;
+	}
+	public void setHideUserNotFoundExceptions(boolean hideUserNotFoundExceptions) {
+		this.hideUserNotFoundExceptions = hideUserNotFoundExceptions;
 	}
 	
  

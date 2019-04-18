@@ -1,196 +1,218 @@
 package org.springframework.security.boot;
 
-import javax.annotation.Resource;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.boot.ldap.authentication.AuthenticatorProviderBuilder;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.ldap.core.AuthenticationSource;
+import org.springframework.ldap.core.support.BaseLdapPathContextSource;
+import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
+import org.springframework.ldap.core.support.DigestMd5DirContextAuthenticationStrategy;
+import org.springframework.ldap.core.support.DirContextAuthenticationStrategy;
+import org.springframework.ldap.core.support.ExternalTlsDirContextAuthenticationStrategy;
+import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyAuthoritiesMapper;
+import org.springframework.security.boot.ldap.SecurityActiveDirectoryLdapProperties;
+import org.springframework.security.boot.ldap.SecurityLdapPopulatorProperties;
+import org.springframework.security.boot.ldap.authentication.AuthoritiesMapperPolicy;
+import org.springframework.security.boot.ldap.authentication.DirContextPolicy;
+import org.springframework.security.boot.ldap.authentication.LdapUsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper;
+import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
-import org.springframework.security.web.session.InvalidSessionStrategy;
-import org.springframework.security.web.session.SessionInformationExpiredStrategy;
-import org.springframework.security.web.session.SimpleRedirectInvalidSessionStrategy;
-import org.springframework.security.web.session.SimpleRedirectSessionInformationExpiredStrategy;
+import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
+import org.springframework.security.ldap.authentication.AbstractLdapAuthenticationProvider;
+import org.springframework.security.ldap.authentication.AbstractLdapAuthenticator;
+import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
+import org.springframework.security.ldap.authentication.LdapAuthenticator;
+import org.springframework.security.ldap.authentication.PasswordComparisonAuthenticator;
+import org.springframework.security.ldap.authentication.SpringSecurityAuthenticationSource;
+import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
+import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
+import org.springframework.security.ldap.search.LdapUserSearch;
+import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
+import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
+import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
+import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
 
 @Configuration
-@AutoConfigureBefore( name = {
-	"org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration",
-	"org.springframework.security.boot.SecurityBizWebAutoConfiguration"  // spring-boot-starter-security-biz
-})
-@ConditionalOnWebApplication
+@AutoConfigureBefore(SecurityBizAutoConfiguration.class)
 @ConditionalOnProperty(prefix = SecurityLdapProperties.PREFIX, value = "enabled", havingValue = "true")
-@EnableConfigurationProperties({ SecurityLdapProperties.class })
-@EnableWebSecurity
-public class SecurityLdapWebAutoConfiguration extends WebSecurityConfigurerAdapter {
+@EnableConfigurationProperties({ SecurityLdapProperties.class, SecurityBizProperties.class })
+public class SecurityLdapWebAutoConfiguration {
 
-	 
-	    public static final String FORM_BASED_LOGIN_ENTRY_POINT = "/authz/login";
-	    public static final String TOKEN_BASED_AUTH_ENTRY_POINT = "/api/**";
-	    public static final String TOKEN_REFRESH_ENTRY_POINT = "/authz/token";
-	    
-    
 	@Autowired
-	private SecurityBizProperties bizProperties;
-	@Autowired
-	private UserDetailsService userDetailsService;
-	@Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-    
-    @Autowired
-    private AbstractAuthenticationProcessingFilter authenticationFilter;
-    @Autowired
-    private LogoutFilter logoutFilter;
-    
-    @Autowired
-    private InvalidSessionStrategy invalidSessionStrategy;
-    @Autowired
-    private SessionInformationExpiredStrategy expiredSessionStrategy;
-    @Autowired 
-    private AuthenticationSuccessHandler successHandler;
-    @Autowired 
-    private AuthenticationFailureHandler failureHandler;
-    @Autowired 
-    private AuthenticationManager authenticationManager;
-    
-    @Resource(name="authenticatorProviderBuilder")
-    private AuthenticatorProviderBuilder authenticatorProviderBuilder; 
-    
-    @Bean
-	@ConditionalOnMissingBean
-    public InvalidSessionStrategy invalidSessionStrategy(){
-		return new SimpleRedirectInvalidSessionStrategy(bizProperties.getRedirectUrl());
+	private SecurityLdapProperties ldapProperties;
+
+	public LdapContextSource ldapContextSource() {
+		DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(
+				ldapProperties.getProviderUrl());
+		contextSource.assembleProviderUrlString(ldapProperties.getLdapUrls());
+		/*
+		 * contextSource.setAnonymousReadOnly(anonymousReadOnly);
+		 * contextSource.setAuthenticationSource(authenticationSource);
+		 * contextSource.setAuthenticationStrategy(authenticationStrategy);
+		 * contextSource.setBase(base);
+		 * contextSource.setBaseEnvironmentProperties(baseEnvironmentProperties);
+		 * contextSource.setCacheEnvironmentProperties(cacheEnvironmentProperties);
+		 * contextSource.setPassword(password); contextSource.setPooled(pooled);
+		 * contextSource.setReferral(referral);
+		 */
+		return contextSource;
 	}
-    
-    @Bean
-	@ConditionalOnMissingBean
-    public SessionInformationExpiredStrategy expiredSessionStrategy(){
-		return new SimpleRedirectSessionInformationExpiredStrategy(bizProperties.getExpiredUrl());
+
+	@Bean
+	public DirContextAuthenticationStrategy authenticationStrategy() {
+		if (DirContextPolicy.DEFAULT_TLS.equals(ldapProperties.getDirContextPolicy())) {
+			return new DefaultTlsDirContextAuthenticationStrategy();
+		} else if (DirContextPolicy.EXTERNAL_TLS.equals(ldapProperties.getDirContextPolicy())) {
+			return new ExternalTlsDirContextAuthenticationStrategy();
+		} else if (DirContextPolicy.DIGEST_MD5.equals(ldapProperties.getDirContextPolicy())) {
+			return new DigestMd5DirContextAuthenticationStrategy();
+		} else {
+			return new SimpleDirContextAuthenticationStrategy();
+		}
 	}
-    
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-    
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
-    	//  配置LDAP的验证方式
-        auth.authenticationProvider(authenticatorProviderBuilder.getAuthenticationProvider());
-    }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-    	http
-        .csrf().disable() // We don't need CSRF for JWT based authentication
-        .exceptionHandling()
-        .authenticationEntryPoint(this.authenticationEntryPoint)
-        
-        .and()
-            .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+	@Bean
+	public AuthenticationSource authenticationSource() {
+		return new SpringSecurityAuthenticationSource();
+	}
 
-        .and()
-            .authorizeRequests()
-                .antMatchers(bizProperties.getLoginUrlPatterns()).permitAll() // Login end-point
-                .antMatchers(TOKEN_REFRESH_ENTRY_POINT).permitAll() // Token refresh end-point
-                .antMatchers("/console").permitAll() // H2 Console Dash-board - only for testing
-        .and()
-            .authorizeRequests()
-                .antMatchers(TOKEN_BASED_AUTH_ENTRY_POINT).authenticated() // Protected API End-points
-        .and()
-            .addFilterBefore(new CustomCorsFilter(), UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(jwtAjaxLoginProcessingFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(jwtTokenAuthenticationProcessingFilter, UsernamePasswordAuthenticationFilter.class);
-    }
-    
-   /* @Override
-    protected void configure(HttpSecurity http) throws Exception {
+	@Bean
+	@ConditionalOnMissingBean
+	public BaseLdapPathContextSource contextSource(DirContextAuthenticationStrategy authenticationStrategy,
+			AuthenticationSource authenticationSource) {
+
+		DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(
+				ldapProperties.getProviderUrl());
+
+		contextSource.assembleProviderUrlString(ldapProperties.getLdapUrls());
+		contextSource.setAnonymousReadOnly(ldapProperties.isAnonymousReadOnly());
+		contextSource.setAuthenticationSource(authenticationSource);
+		contextSource.setAuthenticationStrategy(authenticationStrategy);
+		contextSource.setBase(ldapProperties.getBase());
+		contextSource.setBaseEnvironmentProperties(ldapProperties.getBaseEnvironmentProperties());
+		contextSource.setCacheEnvironmentProperties(ldapProperties.isCacheEnvironmentProperties());
+		contextSource.setPassword(ldapProperties.getPassword());
+		contextSource.setPooled(ldapProperties.isPooled());
+		contextSource.setReferral(ldapProperties.getReferral());
+		contextSource.setUrls(ldapProperties.getUrls());
+		contextSource.setUserDn(ldapProperties.getUserDn());
+
+		return contextSource;
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public LdapUserSearch userSearch(BaseLdapPathContextSource contextSource) {
+
+		FilterBasedLdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapProperties.getSearchBase(),
+				ldapProperties.getSearchFilter(), contextSource);
+
+		userSearch.setDerefLinkFlag(ldapProperties.isDerefLinkFlag());
+		userSearch.setReturningAttributes(ldapProperties.getReturningAttrs());
+		userSearch.setSearchSubtree(ldapProperties.isSearchSubtree());
+		userSearch.setSearchTimeLimit(ldapProperties.getSearchTimeLimit());
+
+		return userSearch;
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public UserDetailsService userDetailsService(LdapUserSearch userSearch,
+			LdapAuthoritiesPopulator authoritiesPopulator) {
+		return new LdapUserDetailsService(userSearch, authoritiesPopulator);
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public UserDetailsContextMapper userDetailsContextMapper() {
+		return new LdapUserDetailsMapper();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public GrantedAuthoritiesMapper authoritiesMapper(RoleHierarchy roleHierarchy) {
+		if (AuthoritiesMapperPolicy.ROLE_HIERARCHY.equals(ldapProperties.getAuthoritiesMapperPolicy())) {
+			return new RoleHierarchyAuthoritiesMapper(roleHierarchy);
+		} else if (AuthoritiesMapperPolicy.SIMPLE.equals(ldapProperties.getAuthoritiesMapperPolicy())) {
+			return new SimpleAuthorityMapper();
+		} else {
+			return new NullAuthoritiesMapper();
+		}
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public AbstractLdapAuthenticator ldapAuthenticator(BaseLdapPathContextSource ldapPathContextSource) {
+		return new PasswordComparisonAuthenticator(ldapPathContextSource);
+	}
+
+	@Bean
+	public LdapAuthoritiesPopulator ldapAuthoritiesPopulator(BaseLdapPathContextSource contextSource) {
+
+		SecurityLdapPopulatorProperties populatorProperties = ldapProperties.getPopulator();
 		
-		HeadersConfigurer<HttpSecurity> headers = http.headers();
-        
-		if(null != bizProperties.getReferrerPolicy()) {
-			headers.referrerPolicy(bizProperties.getReferrerPolicy()).and();
+		DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(contextSource,
+				ldapProperties.getGroupSearchBase());
+		authoritiesPopulator.setConvertToUpperCase(populatorProperties.isConvertToUpperCase());
+		authoritiesPopulator.setDefaultRole(populatorProperties.getDefaultRole());
+		authoritiesPopulator.setGroupRoleAttribute(populatorProperties.getGroupRoleAttribute());
+		authoritiesPopulator.setGroupSearchFilter(populatorProperties.getGroupSearchFilter());
+		authoritiesPopulator.setIgnorePartialResultException(populatorProperties.isIgnorePartialResultException());
+		authoritiesPopulator.setRolePrefix(populatorProperties.getRolePrefix());
+		authoritiesPopulator.setSearchSubtree(populatorProperties.isSearchSubtree());
+		
+		return authoritiesPopulator;
+	}
+
+	@Bean
+	public AbstractLdapAuthenticationProvider ldapAuthenticationProvider(
+			GrantedAuthoritiesMapper authoritiesMapper,
+			LdapAuthenticator ldapAuthenticator,
+			LdapAuthoritiesPopulator ldapAuthoritiesPopulator, 
+			MessageSource messageSource, 
+			UserDetailsContextMapper userDetailsContextMapper) throws Exception {
+
+		SecurityActiveDirectoryLdapProperties adLdapProperties = ldapProperties.getActiveDirectory();
+		if (adLdapProperties.isEnabled()) {
+
+			ActiveDirectoryLdapAuthenticationProvider authenticationProvider = new ActiveDirectoryLdapAuthenticationProvider(
+					adLdapProperties.getDomain(), adLdapProperties.getUrl(), adLdapProperties.getRootDn());
+
+			authenticationProvider.setAuthoritiesMapper(authoritiesMapper);
+			authenticationProvider.setContextEnvironmentProperties(adLdapProperties.getEnvironment());
+			authenticationProvider.setConvertSubErrorCodesToExceptions(adLdapProperties.isConvertSubErrorCodesToExceptions());
+			authenticationProvider.setMessageSource(messageSource);
+			authenticationProvider.setSearchFilter(ldapProperties.getSearchFilter());
+			authenticationProvider.setUseAuthenticationRequestCredentials(ldapProperties.isUseAuthenticationRequestCredentials());
+			authenticationProvider.setUserDetailsContextMapper(userDetailsContextMapper);
+			return authenticationProvider;
 		}
-        
-		if(null != bizProperties.getFrameOptions()) {
-			headers.frameOptions().disable();
-		}
-        
-        
-        http.csrf().disable();
 
-        http.authorizeRequests()
-                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                .antMatchers("/static/**").permitAll() 	// 不拦截静态资源
-                .antMatchers("/api/**").permitAll()  	// 不拦截对外API
-                    .anyRequest().authenticated();  	// 所有资源都需要登陆后才可以访问。
+		LdapAuthenticationProvider authenticationProvider = new LdapAuthenticationProvider(ldapAuthenticator,
+				ldapAuthoritiesPopulator) {
+			public boolean supports(Class<?> authentication) {
+				return LdapUsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
+			}
+		};
 
-        http.logout().permitAll();  // 不拦截注销
+		authenticationProvider.setAuthoritiesMapper(authoritiesMapper);
+		authenticationProvider.setHideUserNotFoundExceptions(ldapProperties.isHideUserNotFoundExceptions());
+		authenticationProvider.setMessageSource(messageSource);
+		authenticationProvider.setUseAuthenticationRequestCredentials(ldapProperties.isUseAuthenticationRequestCredentials());
+		authenticationProvider.setUserDetailsContextMapper(userDetailsContextMapper);
 
-        http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint);
-
-        http.servletApi().disable();
-
-        SessionManagementConfigurer<HttpSecurity> sessionManagement = http.sessionManagement();
-        
-        sessionManagement.enableSessionUrlRewriting(false)
-        .invalidSessionStrategy(invalidSessionStrategy)
-        .invalidSessionUrl(bizProperties.getRedirectUrl())
-        .sessionAuthenticationErrorUrl(bizProperties.getFailureUrl())
-        //.sessionAuthenticationStrategy(sessionAuthenticationStrategy)
-        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
-        
-        if(bizProperties.isMultipleSession()) {
-        	sessionManagement.maximumSessions(bizProperties.getMaximumSessions()).expiredSessionStrategy(expiredSessionStrategy).expiredUrl(bizProperties.getExpiredUrl()).maxSessionsPreventsLogin(bizProperties.isMaxSessionsPreventsLogin());
-        }
-        
-        http.addFilter(authenticationFilter)
-                .addFilterBefore(logoutFilter, LogoutFilter.class);
-        
-        // 关闭csrf验证
-        http.csrf().disable()
-                // 对请求进行认证
-                .authorizeRequests()
-                // 所有 / 的所有请求 都放行
-                .antMatchers("/").permitAll()
-                // 所有 /login 的POST请求 都放行
-                .antMatchers(HttpMethod.POST, "/login").permitAll()
-                // 权限检查
-                .antMatchers("/hello").hasAuthority("AUTH_WRITE")
-                // 角色检查
-                .antMatchers("/world").hasRole("ADMIN")
-                // 所有请求需要身份认证
-                .anyRequest().authenticated()
-            .and()
-                // 添加一个过滤器 所有访问 /login 的请求交给 JWTLoginFilter 来处理 这个类处理所有的JWT相关内容
-                .addFilterBefore(new JWTLoginFilter("/login", authenticationManager()),
-                        UsernamePasswordAuthenticationFilter.class)
-                // 添加一个过滤器验证其他请求的Token是否合法
-                .addFilterBefore(new JWTAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class);
-        
-        
-        
-        
-        http.antMatcher("/**");
-    }*/
+		return authenticationProvider;
+	}
 
 }

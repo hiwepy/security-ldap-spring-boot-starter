@@ -370,8 +370,19 @@
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
         <maven-surefire-plugin.vertsion>2.22.1</maven-surefire-plugin.vertsion>
 		<maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
-		<security-biz.version>1.0.0-SNAPSHOT</security-biz.version>
+		<spring-security-biz.version>1.0.0-SNAPSHOT</spring-security-biz.version>
 	</properties>
+	
+	<dependencyManagement>
+		<dependencies>
+			<!-- https://github.com/vindell/spring-boot-starter-security-biz -->
+			<dependency>
+				<groupId>com.github.vindell</groupId>
+				<artifactId>spring-boot-starter-security-biz</artifactId>
+				<version>${spring-security-biz.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	
 	<dependencies>
 		
@@ -422,17 +433,13 @@
 			<artifactId>spring-boot-autoconfigure</artifactId>
 		</dependency>
 		
-		<!-- Commons项目中用来处理Java基本对象方法的工具类包， 可以简化很多平时经常要用到的写法， 例如判断字符串是否为空等等 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
-	 
-		<!-- https://github.com/vindell/spring-boot-starter-security-biz -->
 		<dependency>
 			<groupId>com.github.vindell</groupId>
 			<artifactId>spring-boot-starter-security-biz</artifactId>
-			<version>${security-biz.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
