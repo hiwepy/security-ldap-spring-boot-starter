@@ -47,7 +47,7 @@ import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
 @AutoConfigureBefore(SecurityBizAutoConfiguration.class)
 @ConditionalOnProperty(prefix = SecurityLdapProperties.PREFIX, value = "enabled", havingValue = "true")
 @EnableConfigurationProperties({ SecurityLdapProperties.class, SecurityBizProperties.class })
-public class SecurityLdapWebAutoConfiguration {
+public class SecurityLdapAutoConfiguration {
 
 	@Autowired
 	private SecurityLdapProperties ldapProperties;

@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ConditionalOnWebApplication
 @ConditionalOnProperty(prefix = SecurityLdapProperties.PREFIX, value = "enabled", havingValue = "true")
 @EnableConfigurationProperties({ SecurityLdapProperties.class, SecurityBizProperties.class, ServerProperties.class })
-public class SecurityLdapWebFilterConfiguration extends WebSecurityConfigurerAdapter
+public class SecurityLdapFilterConfiguration extends WebSecurityConfigurerAdapter
 		implements ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher eventPublisher;
