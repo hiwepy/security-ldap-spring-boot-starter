@@ -21,7 +21,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
  * TODO
  * @author 		： <a href="https://github.com/vindell">wandl</a>
  */
-
+@SuppressWarnings("serial")
 public class LdapUsernamePasswordAuthenticationToken extends UsernamePasswordAuthenticationToken {
 
 	public LdapUsernamePasswordAuthenticationToken(Object principal, Object credentials) {
