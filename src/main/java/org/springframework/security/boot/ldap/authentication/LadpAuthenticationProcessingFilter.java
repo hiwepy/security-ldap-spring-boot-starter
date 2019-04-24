@@ -17,7 +17,7 @@ package org.springframework.security.boot.ldap.authentication;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.boot.SecurityLdapProperties;
-import org.springframework.security.boot.biz.authentication.PostUsernamePasswordCaptchaAuthenticationProcessingFilter;
+import org.springframework.security.boot.biz.authentication.PostRequestAuthenticationProcessingFilter;
 import org.springframework.security.boot.ldap.SecurityActiveDirectoryLdapProperties;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * TODO
  * @author ： <a href="https://github.com/vindell">wandl</a>
  */
-public class LadpAuthenticationProcessingFilter extends PostUsernamePasswordCaptchaAuthenticationProcessingFilter {
+public class LadpAuthenticationProcessingFilter extends PostRequestAuthenticationProcessingFilter {
 
 	private SecurityLdapProperties ldapProperties;
 	

@@ -12,7 +12,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.boot.biz.authentication.PostUsernamePasswordCaptchaAuthenticationProcessingFilter;
+import org.springframework.security.boot.biz.authentication.PostRequestAuthenticationProcessingFilter;
 import org.springframework.security.boot.biz.authentication.captcha.CaptchaResolver;
 import org.springframework.security.boot.ldap.authentication.LadpAuthenticationProcessingFilter;
 import org.springframework.security.boot.utils.StringUtils;
@@ -98,7 +98,7 @@ public class SecurityLdapFilterConfiguration extends WebSecurityConfigurerAdapte
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.addFilterBefore(ladpAuthenticationProcessingFilter, PostUsernamePasswordCaptchaAuthenticationProcessingFilter.class);
+		http.addFilterBefore(ladpAuthenticationProcessingFilter, PostRequestAuthenticationProcessingFilter.class);
 	}
 
 	@Override
