@@ -18,7 +18,8 @@ package org.springframework.security.boot.ldap.authentication;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.boot.SecurityLdapProperties;
 import org.springframework.security.boot.biz.authentication.PostRequestAuthenticationProcessingFilter;
-import org.springframework.security.boot.ldap.SecurityActiveDirectoryLdapProperties;
+import org.springframework.security.boot.ldap.property.SecurityActiveDirectoryLdapProperties;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,7 +32,7 @@ public class LadpAuthenticationProcessingFilter extends PostRequestAuthenticatio
 	private SecurityLdapProperties ldapProperties;
 	
 	public LadpAuthenticationProcessingFilter(ObjectMapper objectMapper, SecurityLdapProperties ldapProperties) {
-		super(objectMapper);
+		super(objectMapper, new AntPathRequestMatcher("/login/ladp", "POST"));
 		this.ldapProperties = ldapProperties;
 	}
 	

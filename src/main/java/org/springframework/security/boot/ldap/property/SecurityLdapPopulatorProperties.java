@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.springframework.security.boot.ldap;
+package org.springframework.security.boot.ldap.property;
 
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.util.Assert;

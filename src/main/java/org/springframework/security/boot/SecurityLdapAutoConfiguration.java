@@ -18,11 +18,11 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyAuthoritiesMapper;
-import org.springframework.security.boot.ldap.SecurityActiveDirectoryLdapProperties;
-import org.springframework.security.boot.ldap.SecurityLdapPopulatorProperties;
 import org.springframework.security.boot.ldap.authentication.AuthoritiesMapperPolicy;
 import org.springframework.security.boot.ldap.authentication.DirContextPolicy;
 import org.springframework.security.boot.ldap.authentication.LdapUsernamePasswordAuthenticationToken;
+import org.springframework.security.boot.ldap.property.SecurityActiveDirectoryLdapProperties;
+import org.springframework.security.boot.ldap.property.SecurityLdapPopulatorProperties;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
@@ -54,8 +54,8 @@ public class SecurityLdapAutoConfiguration {
 
 	public LdapContextSource ldapContextSource() {
 		DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(
-				ldapProperties.getProviderUrl());
-		contextSource.assembleProviderUrlString(ldapProperties.getLdapUrls());
+				ldapProperties.getAuthc().getProviderUrl());
+		contextSource.assembleProviderUrlString(ldapProperties.getAuthc().getLdapUrls());
 		/*
 		 * contextSource.setAnonymousReadOnly(anonymousReadOnly);
 		 * contextSource.setAuthenticationSource(authenticationSource);
@@ -71,11 +71,11 @@ public class SecurityLdapAutoConfiguration {
 
 	@Bean
 	public DirContextAuthenticationStrategy authenticationStrategy() {
-		if (DirContextPolicy.DEFAULT_TLS.equals(ldapProperties.getDirContextPolicy())) {
+		if (DirContextPolicy.DEFAULT_TLS.equals(ldapProperties.getAuthc().getDirContextPolicy())) {
 			return new DefaultTlsDirContextAuthenticationStrategy();
-		} else if (DirContextPolicy.EXTERNAL_TLS.equals(ldapProperties.getDirContextPolicy())) {
+		} else if (DirContextPolicy.EXTERNAL_TLS.equals(ldapProperties.getAuthc().getDirContextPolicy())) {
 			return new ExternalTlsDirContextAuthenticationStrategy();
-		} else if (DirContextPolicy.DIGEST_MD5.equals(ldapProperties.getDirContextPolicy())) {
+		} else if (DirContextPolicy.DIGEST_MD5.equals(ldapProperties.getAuthc().getDirContextPolicy())) {
 			return new DigestMd5DirContextAuthenticationStrategy();
 		} else {
 			return new SimpleDirContextAuthenticationStrategy();
@@ -93,20 +93,20 @@ public class SecurityLdapAutoConfiguration {
 			AuthenticationSource authenticationSource) {
 
 		DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(
-				ldapProperties.getProviderUrl());
+				ldapProperties.getAuthc().getProviderUrl());
 
-		contextSource.assembleProviderUrlString(ldapProperties.getLdapUrls());
-		contextSource.setAnonymousReadOnly(ldapProperties.isAnonymousReadOnly());
+		contextSource.assembleProviderUrlString(ldapProperties.getAuthc().getLdapUrls());
+		contextSource.setAnonymousReadOnly(ldapProperties.getAuthc().isAnonymousReadOnly());
 		contextSource.setAuthenticationSource(authenticationSource);
 		contextSource.setAuthenticationStrategy(authenticationStrategy);
-		contextSource.setBase(ldapProperties.getBase());
-		contextSource.setBaseEnvironmentProperties(ldapProperties.getBaseEnvironmentProperties());
-		contextSource.setCacheEnvironmentProperties(ldapProperties.isCacheEnvironmentProperties());
-		contextSource.setPassword(ldapProperties.getPassword());
-		contextSource.setPooled(ldapProperties.isPooled());
-		contextSource.setReferral(ldapProperties.getReferral());
-		contextSource.setUrls(ldapProperties.getUrls());
-		contextSource.setUserDn(ldapProperties.getUserDn());
+		contextSource.setBase(ldapProperties.getAuthc().getBase());
+		contextSource.setBaseEnvironmentProperties(ldapProperties.getAuthc().getBaseEnvironmentProperties());
+		contextSource.setCacheEnvironmentProperties(ldapProperties.getAuthc().isCacheEnvironmentProperties());
+		contextSource.setPassword(ldapProperties.getAuthc().getPassword());
+		contextSource.setPooled(ldapProperties.getAuthc().isPooled());
+		contextSource.setReferral(ldapProperties.getAuthc().getReferral());
+		contextSource.setUrls(ldapProperties.getAuthc().getUrls());
+		contextSource.setUserDn(ldapProperties.getAuthc().getUserDn());
 
 		return contextSource;
 	}
@@ -115,13 +115,13 @@ public class SecurityLdapAutoConfiguration {
 	@ConditionalOnMissingBean
 	public LdapUserSearch userSearch(BaseLdapPathContextSource contextSource) {
 
-		FilterBasedLdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapProperties.getSearchBase(),
-				ldapProperties.getSearchFilter(), contextSource);
+		FilterBasedLdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapProperties.getAuthc().getSearchBase(),
+				ldapProperties.getAuthc().getSearchFilter(), contextSource);
 
-		userSearch.setDerefLinkFlag(ldapProperties.isDerefLinkFlag());
-		userSearch.setReturningAttributes(ldapProperties.getReturningAttrs());
-		userSearch.setSearchSubtree(ldapProperties.isSearchSubtree());
-		userSearch.setSearchTimeLimit(ldapProperties.getSearchTimeLimit());
+		userSearch.setDerefLinkFlag(ldapProperties.getAuthc().isDerefLinkFlag());
+		userSearch.setReturningAttributes(ldapProperties.getAuthc().getReturningAttrs());
+		userSearch.setSearchSubtree(ldapProperties.getAuthc().isSearchSubtree());
+		userSearch.setSearchTimeLimit(ldapProperties.getAuthc().getSearchTimeLimit());
 
 		return userSearch;
 	}
@@ -142,9 +142,9 @@ public class SecurityLdapAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public GrantedAuthoritiesMapper authoritiesMapper(RoleHierarchy roleHierarchy) {
-		if (AuthoritiesMapperPolicy.ROLE_HIERARCHY.equals(ldapProperties.getAuthoritiesMapperPolicy())) {
+		if (AuthoritiesMapperPolicy.ROLE_HIERARCHY.equals(ldapProperties.getAuthc().getAuthoritiesMapperPolicy())) {
 			return new RoleHierarchyAuthoritiesMapper(roleHierarchy);
-		} else if (AuthoritiesMapperPolicy.SIMPLE.equals(ldapProperties.getAuthoritiesMapperPolicy())) {
+		} else if (AuthoritiesMapperPolicy.SIMPLE.equals(ldapProperties.getAuthc().getAuthoritiesMapperPolicy())) {
 			return new SimpleAuthorityMapper();
 		} else {
 			return new NullAuthoritiesMapper();
@@ -163,7 +163,7 @@ public class SecurityLdapAutoConfiguration {
 		SecurityLdapPopulatorProperties populatorProperties = ldapProperties.getPopulator();
 		
 		DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(contextSource,
-				ldapProperties.getGroupSearchBase());
+				ldapProperties.getAuthc().getGroupSearchBase());
 		authoritiesPopulator.setConvertToUpperCase(populatorProperties.isConvertToUpperCase());
 		authoritiesPopulator.setDefaultRole(populatorProperties.getDefaultRole());
 		authoritiesPopulator.setGroupRoleAttribute(populatorProperties.getGroupRoleAttribute());
@@ -193,8 +193,8 @@ public class SecurityLdapAutoConfiguration {
 			authenticationProvider.setContextEnvironmentProperties(adLdapProperties.getEnvironment());
 			authenticationProvider.setConvertSubErrorCodesToExceptions(adLdapProperties.isConvertSubErrorCodesToExceptions());
 			authenticationProvider.setMessageSource(messageSource);
-			authenticationProvider.setSearchFilter(ldapProperties.getSearchFilter());
-			authenticationProvider.setUseAuthenticationRequestCredentials(ldapProperties.isUseAuthenticationRequestCredentials());
+			authenticationProvider.setSearchFilter(ldapProperties.getAuthc().getSearchFilter());
+			authenticationProvider.setUseAuthenticationRequestCredentials(ldapProperties.getAuthc().isUseAuthenticationRequestCredentials());
 			authenticationProvider.setUserDetailsContextMapper(userDetailsContextMapper);
 			return authenticationProvider;
 		}
@@ -207,9 +207,9 @@ public class SecurityLdapAutoConfiguration {
 		};
 
 		authenticationProvider.setAuthoritiesMapper(authoritiesMapper);
-		authenticationProvider.setHideUserNotFoundExceptions(ldapProperties.isHideUserNotFoundExceptions());
+		authenticationProvider.setHideUserNotFoundExceptions(ldapProperties.getAuthc().isHideUserNotFoundExceptions());
 		authenticationProvider.setMessageSource(messageSource);
-		authenticationProvider.setUseAuthenticationRequestCredentials(ldapProperties.isUseAuthenticationRequestCredentials());
+		authenticationProvider.setUseAuthenticationRequestCredentials(ldapProperties.getAuthc().isUseAuthenticationRequestCredentials());
 		authenticationProvider.setUserDetailsContextMapper(userDetailsContextMapper);
 
 		return authenticationProvider;

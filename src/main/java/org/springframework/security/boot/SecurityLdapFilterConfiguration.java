@@ -37,8 +37,6 @@ public class SecurityLdapFilterConfiguration extends WebSecurityConfigurerAdapte
 
 	private ApplicationEventPublisher eventPublisher;
 	@Autowired
-	private SecurityBizProperties bizProperties;
-	@Autowired
 	private SecurityLdapProperties ldapProperties;
 	
 	@Bean
@@ -55,32 +53,32 @@ public class SecurityLdapFilterConfiguration extends WebSecurityConfigurerAdapte
 		// Form Login With LDAP 
 		LadpAuthenticationProcessingFilter authcFilter = new LadpAuthenticationProcessingFilter(objectMapper, ldapProperties);
 		
-		authcFilter.setCaptchaParameter(bizProperties.getCaptcha().getParamName());
+		authcFilter.setCaptchaParameter(ldapProperties.getCaptcha().getParamName());
 		// 是否验证码必填
-		authcFilter.setCaptchaRequired(bizProperties.getCaptcha().isRequired());
+		authcFilter.setCaptchaRequired(ldapProperties.getCaptcha().isRequired());
 		// 登陆失败重试次数，超出限制需要输入验证码
-		authcFilter.setRetryTimesWhenAccessDenied(bizProperties.getCaptcha().getRetryTimesWhenAccessDenied());
+		authcFilter.setRetryTimesWhenAccessDenied(ldapProperties.getCaptcha().getRetryTimesWhenAccessDenied());
 		// 验证码解析器
 		authcFilter.setCaptchaResolver(captchaResolver);
 		
-		authcFilter.setAllowSessionCreation(bizProperties.getSessionMgt().isAllowSessionCreation());
+		authcFilter.setAllowSessionCreation(ldapProperties.getSessionMgt().isAllowSessionCreation());
 		authcFilter.setApplicationEventPublisher(eventPublisher);
 		authcFilter.setAuthenticationFailureHandler(failureHandler);
 		authcFilter.setAuthenticationManager(authenticationManager);
 		authcFilter.setAuthenticationSuccessHandler(successHandler);
 		authcFilter.setContinueChainBeforeSuccessfulAuthentication(false);
-		if (StringUtils.hasText(bizProperties.getAuthc().getLoginUrlPatterns())) {
-			authcFilter.setFilterProcessesUrl(bizProperties.getAuthc().getLoginUrlPatterns());
+		if (StringUtils.hasText(ldapProperties.getAuthc().getLoginUrlPatterns())) {
+			authcFilter.setFilterProcessesUrl(ldapProperties.getAuthc().getLoginUrlPatterns());
 		}
 		authcFilter.setMessageSource(messageSource);
-		authcFilter.setPasswordParameter(bizProperties.getAuthc().getPasswordParameter());
-		authcFilter.setPostOnly(bizProperties.getAuthc().isPostOnly());
+		authcFilter.setPasswordParameter(ldapProperties.getAuthc().getPasswordParameter());
+		authcFilter.setPostOnly(ldapProperties.getAuthc().isPostOnly());
 		authcFilter.setRememberMeServices(rememberMeServices);
 		
 		authcFilter.setSessionAuthenticationStrategy(sessionStrategy);
 		
 		authcFilter.setSessionAuthenticationStrategy(sessionStrategy);
-		authcFilter.setUsernameParameter(bizProperties.getAuthc().getUsernameParameter());
+		authcFilter.setUsernameParameter(ldapProperties.getAuthc().getUsernameParameter());
 
 		return authcFilter;
 	}
