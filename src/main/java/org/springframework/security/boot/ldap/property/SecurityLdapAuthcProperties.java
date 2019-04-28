@@ -24,12 +24,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityLdapAuthcProperties {
 
 	private String loginUrlPatterns = "/login/ldap";;
+	/** 系统主页：登录成功后跳转路径 */
+	private String successUrl = "/index";;
+	/** 异常页面：认证失败时的跳转路径 */
+	private String failureUrl = "/error";
+	
 	
 	/** the username parameter name. Defaults to "username". */
 	private String usernameParameter = UsernamePasswordAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY;
 	/** the password parameter name. Defaults to "password". */
 	private String passwordParameter = UsernamePasswordAuthenticationFilter.SPRING_SECURITY_FORM_PASSWORD_KEY;
-	
+	private String targetUrlParameter = "target";
 	private boolean useAuthenticationRequestCredentials = true;
 
 	private String[] ldapUrls;
@@ -111,7 +116,8 @@ public class SecurityLdapAuthcProperties {
 
 	private DirContextPolicy dirContextPolicy = DirContextPolicy.SIMPLE;
 	private AuthoritiesMapperPolicy authoritiesMapperPolicy = AuthoritiesMapperPolicy.NONE;
-
+	private boolean useReferer = false;
+	private boolean useForward = false;
 	public String getLoginUrlPatterns() {
 		return loginUrlPatterns;
 	}
@@ -134,6 +140,14 @@ public class SecurityLdapAuthcProperties {
 
 	public void setPasswordParameter(String passwordParameter) {
 		this.passwordParameter = passwordParameter;
+	}
+
+	public String getTargetUrlParameter() {
+		return targetUrlParameter;
+	}
+
+	public void setTargetUrlParameter(String targetUrlParameter) {
+		this.targetUrlParameter = targetUrlParameter;
 	}
 
 	public boolean isUseAuthenticationRequestCredentials() {
@@ -318,6 +332,38 @@ public class SecurityLdapAuthcProperties {
 
 	public void setHideUserNotFoundExceptions(boolean hideUserNotFoundExceptions) {
 		this.hideUserNotFoundExceptions = hideUserNotFoundExceptions;
+	}
+
+	public String getSuccessUrl() {
+		return successUrl;
+	}
+
+	public void setSuccessUrl(String successUrl) {
+		this.successUrl = successUrl;
+	}
+
+	public String getFailureUrl() {
+		return failureUrl;
+	}
+
+	public void setFailureUrl(String failureUrl) {
+		this.failureUrl = failureUrl;
+	}
+
+	public boolean isUseReferer() {
+		return useReferer;
+	}
+
+	public void setUseReferer(boolean useReferer) {
+		this.useReferer = useReferer;
+	}
+
+	public boolean isUseForward() {
+		return useForward;
+	}
+
+	public void setUseForward(boolean useForward) {
+		this.useForward = useForward;
 	}
 
 }

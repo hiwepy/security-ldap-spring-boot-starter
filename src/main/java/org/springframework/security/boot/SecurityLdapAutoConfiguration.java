@@ -1,6 +1,9 @@
 package org.springframework.security.boot;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,8 +21,11 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyAuthoritiesMapper;
+import org.springframework.security.boot.biz.authentication.AuthenticationListener;
 import org.springframework.security.boot.ldap.authentication.AuthoritiesMapperPolicy;
 import org.springframework.security.boot.ldap.authentication.DirContextPolicy;
+import org.springframework.security.boot.ldap.authentication.LdapAuthenticationFailureHandler;
+import org.springframework.security.boot.ldap.authentication.LdapAuthenticationSuccessHandler;
 import org.springframework.security.boot.ldap.authentication.LdapUsernamePasswordAuthenticationToken;
 import org.springframework.security.boot.ldap.property.SecurityActiveDirectoryLdapProperties;
 import org.springframework.security.boot.ldap.property.SecurityLdapPopulatorProperties;
@@ -42,6 +48,8 @@ import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
+import org.springframework.security.web.RedirectStrategy;
+import org.springframework.security.web.savedrequest.RequestCache;
 
 @Configuration
 @AutoConfigureBefore(SecurityBizAutoConfiguration.class)
@@ -215,4 +223,30 @@ public class SecurityLdapAutoConfiguration {
 		return authenticationProvider;
 	}
 
+	@Bean
+	public LdapAuthenticationSuccessHandler ldapAuthenticationSuccessHandler(
+			@Autowired(required = false) List<AuthenticationListener> authenticationListeners,
+			@Qualifier("upcRedirectStrategy") RedirectStrategy redirectStrategy, 
+			@Qualifier("upcRequestCache") RequestCache requestCache) {
+		LdapAuthenticationSuccessHandler successHandler = new LdapAuthenticationSuccessHandler(
+				authenticationListeners, ldapProperties.getAuthc().getSuccessUrl());
+		successHandler.setRedirectStrategy(redirectStrategy);
+		successHandler.setRequestCache(requestCache);
+		successHandler.setTargetUrlParameter(ldapProperties.getAuthc().getTargetUrlParameter());
+		successHandler.setUseReferer(ldapProperties.getAuthc().isUseReferer());
+		return successHandler;
+	}
+
+	@Bean
+	public LdapAuthenticationFailureHandler ldapAuthenticationFailureHandler(
+			@Autowired(required = false) List<AuthenticationListener> authenticationListeners,
+			@Qualifier("upcRedirectStrategy") RedirectStrategy redirectStrategy) {
+		LdapAuthenticationFailureHandler failureHandler = new LdapAuthenticationFailureHandler(
+				authenticationListeners, ldapProperties.getAuthc().getFailureUrl());
+		failureHandler.setAllowSessionCreation(ldapProperties.getSessionMgt().isAllowSessionCreation());
+		failureHandler.setRedirectStrategy(redirectStrategy);
+		failureHandler.setUseForward(ldapProperties.getAuthc().isUseForward());
+		return failureHandler;
+	}
+	
 }
