@@ -16,7 +16,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.boot.biz.authentication.AuthenticatingFailureCounter;
 import org.springframework.security.boot.biz.authentication.PostRequestAuthenticationProcessingFilter;
 import org.springframework.security.boot.biz.authentication.captcha.CaptchaResolver;
-import org.springframework.security.boot.biz.userdetails.AuthcUserDetailsService;
 import org.springframework.security.boot.ldap.authentication.LadpAuthenticationProcessingFilter;
 import org.springframework.security.boot.ldap.authentication.LdapAuthenticationFailureHandler;
 import org.springframework.security.boot.ldap.authentication.LdapAuthenticationSuccessHandler;
@@ -27,7 +26,6 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.ldap.authentication.AbstractLdapAuthenticationProvider;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
@@ -66,10 +64,8 @@ public class SecurityLdapFilterConfiguration {
 				
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
    				ObjectProvider<ObjectMapper> objectMapperProvider,
-   				ObjectProvider<PasswordEncoder> passwordEncoderProvider,
    				ObjectProvider<SessionRegistry> sessionRegistryProvider,
    				ObjectProvider<RememberMeServices> rememberMeServicesProvider,
-   				ObjectProvider<AuthcUserDetailsService> userDetailsServiceProvider,
    				
    				SecurityLdapProperties ldapProperties,
    				ObjectProvider<AbstractLdapAuthenticationProvider> authenticationProvider,
