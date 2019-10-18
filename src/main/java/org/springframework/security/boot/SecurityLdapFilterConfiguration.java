@@ -7,8 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -19,7 +18,6 @@ import org.springframework.security.boot.biz.authentication.captcha.CaptchaResol
 import org.springframework.security.boot.ldap.authentication.LadpAuthenticationProcessingFilter;
 import org.springframework.security.boot.ldap.authentication.LdapAuthenticationFailureHandler;
 import org.springframework.security.boot.ldap.authentication.LdapAuthenticationSuccessHandler;
-import org.springframework.security.boot.utils.StringUtils;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -44,14 +42,13 @@ public class SecurityLdapFilterConfiguration {
 	@ConditionalOnProperty(prefix = SecurityLdapProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityLdapProperties.class, SecurityBizProperties.class })
     @Order(107)
-	static class JwtAuthcWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter implements ApplicationEventPublisherAware {
-
-    	private ApplicationEventPublisher eventPublisher;
+	static class JwtAuthcWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
     	
     	private final AuthenticationManager authenticationManager;
 	    private final ObjectMapper objectMapper;
 	    private final RememberMeServices rememberMeServices;
-	    
+
+	    private final SecurityBizProperties bizProperties;
 		private final SecurityLdapProperties ldapProperties;
  	    private final AbstractLdapAuthenticationProvider authenticationProvider;
  	    private final LdapAuthenticationSuccessHandler authenticationSuccessHandler;
@@ -62,12 +59,14 @@ public class SecurityLdapFilterConfiguration {
 		
 		public JwtAuthcWebSecurityConfigurerAdapter(
 				
+				SecurityBizProperties bizProperties,
+				SecurityLdapProperties ldapProperties,
+				
 				ObjectProvider<AuthenticationManager> authenticationManagerProvider,
    				ObjectProvider<ObjectMapper> objectMapperProvider,
    				ObjectProvider<SessionRegistry> sessionRegistryProvider,
    				ObjectProvider<RememberMeServices> rememberMeServicesProvider,
    				
-   				SecurityLdapProperties ldapProperties,
    				ObjectProvider<AbstractLdapAuthenticationProvider> authenticationProvider,
    				ObjectProvider<LdapAuthenticationSuccessHandler> authenticationSuccessHandler,
    				ObjectProvider<LdapAuthenticationFailureHandler> authenticationFailureHandler,
@@ -76,12 +75,13 @@ public class SecurityLdapFilterConfiguration {
    				@Qualifier("jwtAuthenticatingFailureCounter") ObjectProvider<AuthenticatingFailureCounter> authenticatingFailureCounter,
 				@Qualifier("jwtSessionAuthenticationStrategy") ObjectProvider<SessionAuthenticationStrategy> sessionAuthenticationStrategyProvider) {
 		    
+			this.bizProperties = bizProperties;
+			this.ldapProperties = ldapProperties;
 			
 			this.authenticationManager = authenticationManagerProvider.getIfAvailable();
    			this.objectMapper = objectMapperProvider.getIfAvailable();
    			this.rememberMeServices = rememberMeServicesProvider.getIfAvailable();
    			
-   			this.ldapProperties = ldapProperties;
    			this.authenticationProvider = authenticationProvider.getIfAvailable();
    			this.authenticationSuccessHandler = authenticationSuccessHandler.getIfAvailable();
    			this.authenticationFailureHandler = authenticationFailureHandler.getIfAvailable();
@@ -92,36 +92,27 @@ public class SecurityLdapFilterConfiguration {
 		}
 
 		@Bean
-		public LadpAuthenticationProcessingFilter ladpAuthenticationProcessingFilter() {
+		public LadpAuthenticationProcessingFilter authenticationProcessingFilter() {
 			
 			// Form Login With LDAP 
-			LadpAuthenticationProcessingFilter authcFilter = new LadpAuthenticationProcessingFilter(objectMapper, ldapProperties);
+			LadpAuthenticationProcessingFilter authenticationFilter = new LadpAuthenticationProcessingFilter(objectMapper, ldapProperties);
 			
-			authcFilter.setCaptchaParameter(ldapProperties.getCaptcha().getParamName());
-			// 是否验证码必填
-			authcFilter.setCaptchaRequired(ldapProperties.getCaptcha().isRequired());
-			// 登陆失败重试次数，超出限制需要输入验证码
-			authcFilter.setRetryTimesWhenAccessDenied(ldapProperties.getCaptcha().getRetryTimesWhenAccessDenied());
-			// 验证码解析器
-			authcFilter.setCaptchaResolver(captchaResolver);
+			/**
+			 * 批量设置参数
+			 */
+			PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
 			
-			authcFilter.setAllowSessionCreation(ldapProperties.getSessionMgt().isAllowSessionCreation());
-			authcFilter.setApplicationEventPublisher(eventPublisher);
-			authcFilter.setAuthenticationFailureHandler(authenticationFailureHandler);
-			authcFilter.setAuthenticationManager(authenticationManager);
-			authcFilter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
-			authcFilter.setContinueChainBeforeSuccessfulAuthentication(false);
-			if (StringUtils.hasText(ldapProperties.getAuthc().getLoginUrlPatterns())) {
-				authcFilter.setFilterProcessesUrl(ldapProperties.getAuthc().getLoginUrlPatterns());
-			}
-			//authcFilter.setMessageSource(messageSource);
-			authcFilter.setPasswordParameter(ldapProperties.getAuthc().getPasswordParameter());
-			authcFilter.setPostOnly(ldapProperties.getAuthc().isPostOnly());
-			authcFilter.setRememberMeServices(rememberMeServices);
-			authcFilter.setSessionAuthenticationStrategy(sessionAuthenticationStrategy);
-			authcFilter.setUsernameParameter(ldapProperties.getAuthc().getUsernameParameter());
-
-			return authcFilter;
+			map.from(bizProperties.getSessionMgt().isAllowSessionCreation()).to(authenticationFilter::setAllowSessionCreation);
+			
+			map.from(authenticationManager).to(authenticationFilter::setAuthenticationManager);
+			map.from(authenticationSuccessHandler).to(authenticationFilter::setAuthenticationSuccessHandler);
+			map.from(authenticationFailureHandler).to(authenticationFilter::setAuthenticationFailureHandler);
+			
+			map.from(ldapProperties.getAuthc().isPostOnly()).to(authenticationFilter::setPostOnly);
+			map.from(rememberMeServices).to(authenticationFilter::setRememberMeServices);
+			map.from(sessionAuthenticationStrategy).to(authenticationFilter::setSessionAuthenticationStrategy);
+			 
+			return authenticationFilter;
 		}
 		
 		@Override
@@ -132,18 +123,13 @@ public class SecurityLdapFilterConfiguration {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.addFilterBefore(ladpAuthenticationProcessingFilter(), PostRequestAuthenticationProcessingFilter.class);
+			http.addFilterBefore(authenticationProcessingFilter(), PostRequestAuthenticationProcessingFilter.class);
 		}
 		
 		@Override
 	    public void configure(WebSecurity web) throws Exception {
 	    	web.ignoring().antMatchers(ldapProperties.getAuthc().getLoginUrlPatterns());
 	    }
-
-		@Override
-		public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
-			this.eventPublisher = applicationEventPublisher;
-		}
 		
 	}
 
