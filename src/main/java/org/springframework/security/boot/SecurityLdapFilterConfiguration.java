@@ -91,7 +91,6 @@ public class SecurityLdapFilterConfiguration {
    			
 		}
 
-		@Bean
 		public LadpAuthenticationProcessingFilter authenticationProcessingFilter() {
 			
 			// Form Login With LDAP 
