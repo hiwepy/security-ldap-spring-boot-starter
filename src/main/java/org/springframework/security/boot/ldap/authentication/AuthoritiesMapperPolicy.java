@@ -15,8 +15,6 @@
  */
 package org.springframework.security.boot.ldap.authentication;
 
-import javax.servlet.http.HttpSession;
-
 import org.springframework.ldap.core.support.AbstractTlsDirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.DirContextAuthenticationStrategy;
 

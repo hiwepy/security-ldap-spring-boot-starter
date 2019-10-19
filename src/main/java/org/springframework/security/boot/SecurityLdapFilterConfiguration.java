@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.PropertyMapper;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -115,13 +114,13 @@ public class SecurityLdapFilterConfiguration {
 		}
 		
 		@Override
-		protected void configure(AuthenticationManagerBuilder auth) {
+		public void configure(AuthenticationManagerBuilder auth) {
 			// 配置LDAP的验证方式
 			auth.authenticationProvider(authenticationProvider);
 		}
 
 		@Override
-		protected void configure(HttpSecurity http) throws Exception {
+		public void configure(HttpSecurity http) throws Exception {
 			http.addFilterBefore(authenticationProcessingFilter(), PostRequestAuthenticationProcessingFilter.class);
 		}
 		
