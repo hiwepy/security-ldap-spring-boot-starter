@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.PropertyMapper;
@@ -39,7 +40,7 @@ public class SecurityLdapFilterConfiguration {
 	@Configuration
 	@ConditionalOnProperty(prefix = SecurityLdapProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityLdapProperties.class, SecurityBizProperties.class })
-    @Order(107)
+	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 5)
 	static class JwtAuthcWebSecurityConfigurerAdapter extends SecurityBizConfigurerAdapter {
     	
     	private final AuthenticationManager authenticationManager;
