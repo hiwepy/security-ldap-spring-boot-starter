@@ -1,5 +1,7 @@
 package org.springframework.security.boot;
 
+import java.util.Arrays;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -12,6 +14,7 @@ import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.boot.biz.authentication.AuthenticatingFailureCounter;
 import org.springframework.security.boot.biz.authentication.PostRequestAuthenticationProcessingFilter;
 import org.springframework.security.boot.biz.authentication.captcha.CaptchaResolver;
@@ -41,7 +44,7 @@ public class SecurityLdapFilterConfiguration {
 	@ConditionalOnProperty(prefix = SecurityLdapProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityLdapProperties.class, SecurityBizProperties.class })
 	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 5)
-	static class JwtAuthcWebSecurityConfigurerAdapter extends SecurityBizConfigurerAdapter {
+	static class LdapWebSecurityConfigurerAdapter extends SecurityBizConfigurerAdapter {
     	
     	private final AuthenticationManager authenticationManager;
 	    private final ObjectMapper objectMapper;
@@ -55,7 +58,7 @@ public class SecurityLdapFilterConfiguration {
 
 		private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
 		
-		public JwtAuthcWebSecurityConfigurerAdapter(
+		public LdapWebSecurityConfigurerAdapter(
 				
 				SecurityBizProperties bizProperties,
 				SecurityLdapProperties ldapProperties,
@@ -90,7 +93,16 @@ public class SecurityLdapFilterConfiguration {
    			
 		}
 
-		public LadpAuthenticationProcessingFilter authenticationProcessingFilter() {
+		@Override
+		public AuthenticationManager authenticationManagerBean() throws Exception {
+   			AuthenticationManager parentManager = authenticationManager == null ? super.authenticationManagerBean() : authenticationManager;
+			ProviderManager authenticationManager = new ProviderManager( Arrays.asList(authenticationProvider), parentManager);
+			// 不擦除认证密码，擦除会导致TokenBasedRememberMeServices因为找不到Credentials再调用UserDetailsService而抛出UsernameNotFoundException
+			authenticationManager.setEraseCredentialsAfterAuthentication(false);
+			return authenticationManager;
+		}
+		
+		public LadpAuthenticationProcessingFilter authenticationProcessingFilter() throws Exception {
 			
 			// Form Login With LDAP 
 			LadpAuthenticationProcessingFilter authenticationFilter = new LadpAuthenticationProcessingFilter(objectMapper, ldapProperties);
@@ -102,7 +114,7 @@ public class SecurityLdapFilterConfiguration {
 			
 			map.from(bizProperties.getSessionMgt().isAllowSessionCreation()).to(authenticationFilter::setAllowSessionCreation);
 			
-			map.from(authenticationManager).to(authenticationFilter::setAuthenticationManager);
+			map.from(authenticationManagerBean()).to(authenticationFilter::setAuthenticationManager);
 			map.from(authenticationSuccessHandler).to(authenticationFilter::setAuthenticationSuccessHandler);
 			map.from(authenticationFailureHandler).to(authenticationFilter::setAuthenticationFailureHandler);
 			
