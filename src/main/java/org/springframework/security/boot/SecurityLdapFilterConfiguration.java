@@ -20,7 +20,6 @@ import org.springframework.security.boot.ldap.authentication.LdapAuthenticationS
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.ldap.authentication.AbstractLdapAuthenticationProvider;
@@ -41,7 +40,7 @@ public class SecurityLdapFilterConfiguration {
 	@ConditionalOnProperty(prefix = SecurityLdapProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityLdapProperties.class, SecurityBizProperties.class })
     @Order(107)
-	static class JwtAuthcWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+	static class JwtAuthcWebSecurityConfigurerAdapter extends SecurityBizConfigurerAdapter {
     	
     	private final AuthenticationManager authenticationManager;
 	    private final ObjectMapper objectMapper;
@@ -52,7 +51,6 @@ public class SecurityLdapFilterConfiguration {
  	    private final AbstractLdapAuthenticationProvider authenticationProvider;
  	    private final LdapAuthenticationSuccessHandler authenticationSuccessHandler;
  	    private final LdapAuthenticationFailureHandler authenticationFailureHandler;
- 	    private final CaptchaResolver captchaResolver;
 
 		private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
 		
@@ -74,6 +72,8 @@ public class SecurityLdapFilterConfiguration {
    				@Qualifier("jwtAuthenticatingFailureCounter") ObjectProvider<AuthenticatingFailureCounter> authenticatingFailureCounter,
 				@Qualifier("jwtSessionAuthenticationStrategy") ObjectProvider<SessionAuthenticationStrategy> sessionAuthenticationStrategyProvider) {
 		    
+			super(bizProperties);
+			
 			this.bizProperties = bizProperties;
 			this.ldapProperties = ldapProperties;
 			
@@ -84,7 +84,6 @@ public class SecurityLdapFilterConfiguration {
    			this.authenticationProvider = authenticationProvider.getIfAvailable();
    			this.authenticationSuccessHandler = authenticationSuccessHandler.getIfAvailable();
    			this.authenticationFailureHandler = authenticationFailureHandler.getIfAvailable();
-   			this.captchaResolver = captchaResolverProvider.getIfAvailable();
    			
    			this.sessionAuthenticationStrategy = sessionAuthenticationStrategyProvider.getIfAvailable();
    			
@@ -114,19 +113,22 @@ public class SecurityLdapFilterConfiguration {
 		}
 		
 		@Override
-		public void configure(AuthenticationManagerBuilder auth) {
+		public void configure(AuthenticationManagerBuilder auth) throws Exception {
 			// 配置LDAP的验证方式
 			auth.authenticationProvider(authenticationProvider);
+			super.configure(auth);
 		}
 
 		@Override
 		public void configure(HttpSecurity http) throws Exception {
-			http.addFilterBefore(authenticationProcessingFilter(), PostRequestAuthenticationProcessingFilter.class);
+			http.antMatcher(ldapProperties.getAuthc().getLoginUrlPatterns())
+				.addFilterBefore(authenticationProcessingFilter(), PostRequestAuthenticationProcessingFilter.class);
+			super.configure(http);
 		}
 		
 		@Override
 	    public void configure(WebSecurity web) throws Exception {
-	    	web.ignoring().antMatchers(ldapProperties.getAuthc().getLoginUrlPatterns());
+	    	super.configure(web);
 	    }
 		
 	}
