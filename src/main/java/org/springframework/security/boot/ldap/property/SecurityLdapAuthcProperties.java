@@ -17,18 +17,31 @@ package org.springframework.security.boot.ldap.property;
 
 import java.util.Map;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.security.boot.biz.property.SecurityAuthcProperties;
+import org.springframework.security.boot.biz.property.SecurityCaptchaProperties;
 import org.springframework.security.boot.ldap.authentication.AuthoritiesMapperPolicy;
 import org.springframework.security.boot.ldap.authentication.DirContextPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-public class SecurityLdapAuthcProperties {
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
+@ConfigurationProperties(SecurityLdapAuthcProperties.PREFIX)
+@Getter
+@Setter
+@ToString
+public class SecurityLdapAuthcProperties extends SecurityAuthcProperties {
+
+	public static final String PREFIX = "spring.security.ldap.authc";
+	
 	private String loginUrlPatterns = "/login/ldap";;
 	/** 系统主页：登录成功后跳转路径 */
 	private String successUrl = "/index";;
 	/** 异常页面：认证失败时的跳转路径 */
 	private String failureUrl = "/error";
-	
 	
 	/** the username parameter name. Defaults to "username". */
 	private String usernameParameter = UsernamePasswordAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY;
@@ -117,253 +130,9 @@ public class SecurityLdapAuthcProperties {
 	private DirContextPolicy dirContextPolicy = DirContextPolicy.SIMPLE;
 	private AuthoritiesMapperPolicy authoritiesMapperPolicy = AuthoritiesMapperPolicy.NONE;
 	private boolean useReferer = false;
-	private boolean useForward = false;
-	public String getLoginUrlPatterns() {
-		return loginUrlPatterns;
-	}
+	private boolean useForward = false; 
 
-	public void setLoginUrlPatterns(String loginUrlPatterns) {
-		this.loginUrlPatterns = loginUrlPatterns;
-	}
-
-	public String getUsernameParameter() {
-		return usernameParameter;
-	}
-
-	public void setUsernameParameter(String usernameParameter) {
-		this.usernameParameter = usernameParameter;
-	}
-
-	public String getPasswordParameter() {
-		return passwordParameter;
-	}
-
-	public void setPasswordParameter(String passwordParameter) {
-		this.passwordParameter = passwordParameter;
-	}
-
-	public String getTargetUrlParameter() {
-		return targetUrlParameter;
-	}
-
-	public void setTargetUrlParameter(String targetUrlParameter) {
-		this.targetUrlParameter = targetUrlParameter;
-	}
-
-	public boolean isUseAuthenticationRequestCredentials() {
-		return useAuthenticationRequestCredentials;
-	}
-
-	public void setUseAuthenticationRequestCredentials(boolean useAuthenticationRequestCredentials) {
-		this.useAuthenticationRequestCredentials = useAuthenticationRequestCredentials;
-	}
-
-	public String[] getLdapUrls() {
-		return ldapUrls;
-	}
-
-	public void setLdapUrls(String[] ldapUrls) {
-		this.ldapUrls = ldapUrls;
-	}
-
-	public String[] getUrls() {
-		return urls;
-	}
-
-	public void setUrls(String[] urls) {
-		this.urls = urls;
-	}
-
-	public boolean isPooled() {
-		return pooled;
-	}
-
-	public void setPooled(boolean pooled) {
-		this.pooled = pooled;
-	}
-
-	public String getGroupSearchBase() {
-		return groupSearchBase;
-	}
-
-	public void setGroupSearchBase(String groupSearchBase) {
-		this.groupSearchBase = groupSearchBase;
-	}
-
-	public boolean isAnonymousReadOnly() {
-		return anonymousReadOnly;
-	}
-
-	public void setAnonymousReadOnly(boolean anonymousReadOnly) {
-		this.anonymousReadOnly = anonymousReadOnly;
-	}
-
-	public String getReferral() {
-		return referral;
-	}
-
-	public void setReferral(String referral) {
-		this.referral = referral;
-	}
-
-	public String getProviderUrl() {
-		return providerUrl;
-	}
-
-	public void setProviderUrl(String providerUrl) {
-		this.providerUrl = providerUrl;
-	}
-
-	public boolean isPostOnly() {
-		return postOnly;
-	}
-
-	public void setPostOnly(boolean postOnly) {
-		this.postOnly = postOnly;
-	}
-
-	public String getUserDn() {
-		return userDn;
-	}
-
-	public void setUserDn(String userDn) {
-		this.userDn = userDn;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public String getBase() {
-		return base;
-	}
-
-	public void setBase(String base) {
-		this.base = base;
-	}
-
-	public Map<String, Object> getBaseEnvironmentProperties() {
-		return baseEnvironmentProperties;
-	}
-
-	public void setBaseEnvironmentProperties(Map<String, Object> baseEnvironmentProperties) {
-		this.baseEnvironmentProperties = baseEnvironmentProperties;
-	}
-
-	public boolean isCacheEnvironmentProperties() {
-		return cacheEnvironmentProperties;
-	}
-
-	public void setCacheEnvironmentProperties(boolean cacheEnvironmentProperties) {
-		this.cacheEnvironmentProperties = cacheEnvironmentProperties;
-	}
-
-	public String getSearchBase() {
-		return searchBase;
-	}
-
-	public void setSearchBase(String searchBase) {
-		this.searchBase = searchBase;
-	}
-
-	public String getSearchFilter() {
-		return searchFilter;
-	}
-
-	public void setSearchFilter(String searchFilter) {
-		this.searchFilter = searchFilter;
-	}
-
-	public boolean isDerefLinkFlag() {
-		return derefLinkFlag;
-	}
-
-	public void setDerefLinkFlag(boolean derefLinkFlag) {
-		this.derefLinkFlag = derefLinkFlag;
-	}
-
-	public String[] getReturningAttrs() {
-		return returningAttrs;
-	}
-
-	public void setReturningAttrs(String[] returningAttrs) {
-		this.returningAttrs = returningAttrs;
-	}
-
-	public boolean isSearchSubtree() {
-		return searchSubtree;
-	}
-
-	public void setSearchSubtree(boolean searchSubtree) {
-		this.searchSubtree = searchSubtree;
-	}
-
-	public int getSearchTimeLimit() {
-		return searchTimeLimit;
-	}
-
-	public void setSearchTimeLimit(int searchTimeLimit) {
-		this.searchTimeLimit = searchTimeLimit;
-	}
-
-	public DirContextPolicy getDirContextPolicy() {
-		return dirContextPolicy;
-	}
-
-	public void setDirContextPolicy(DirContextPolicy dirContextPolicy) {
-		this.dirContextPolicy = dirContextPolicy;
-	}
-
-	public AuthoritiesMapperPolicy getAuthoritiesMapperPolicy() {
-		return authoritiesMapperPolicy;
-	}
-
-	public void setAuthoritiesMapperPolicy(AuthoritiesMapperPolicy authoritiesMapperPolicy) {
-		this.authoritiesMapperPolicy = authoritiesMapperPolicy;
-	}
-
-	public boolean isHideUserNotFoundExceptions() {
-		return hideUserNotFoundExceptions;
-	}
-
-	public void setHideUserNotFoundExceptions(boolean hideUserNotFoundExceptions) {
-		this.hideUserNotFoundExceptions = hideUserNotFoundExceptions;
-	}
-
-	public String getSuccessUrl() {
-		return successUrl;
-	}
-
-	public void setSuccessUrl(String successUrl) {
-		this.successUrl = successUrl;
-	}
-
-	public String getFailureUrl() {
-		return failureUrl;
-	}
-
-	public void setFailureUrl(String failureUrl) {
-		this.failureUrl = failureUrl;
-	}
-
-	public boolean isUseReferer() {
-		return useReferer;
-	}
-
-	public void setUseReferer(boolean useReferer) {
-		this.useReferer = useReferer;
-	}
-
-	public boolean isUseForward() {
-		return useForward;
-	}
-
-	public void setUseForward(boolean useForward) {
-		this.useForward = useForward;
-	}
-
+	@NestedConfigurationProperty
+	private SecurityCaptchaProperties captcha = new SecurityCaptchaProperties();
+	
 }
