@@ -1,4 +1,4 @@
-# spring-boot-starter-security-ldap
+# security-ldap-spring-boot-starter
 security starter for spring boot
 
 ### 说明
@@ -14,7 +14,7 @@ security starter for spring boot
 ``` xml
 <dependency>
 	<groupId>${project.groupId}</groupId>
-	<artifactId>spring-boot-starter-security-ldap</artifactId>
+	<artifactId>security-ldap-spring-boot-starter</artifactId>
 	<version>${project.version}</version>
 </dependency>
 ```

@@ -10,7 +10,7 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	
-	<artifactId>spring-boot-starter-security-ldap</artifactId>
+	<artifactId>security-ldap-spring-boot-starter</artifactId>
 	<description>Spring Boot Starter For Spring Security With Ldap</description>
 	<version>1.0.0-SNAPSHOT</version>
 	<name>${project.groupId}:${project.artifactId}</name>
