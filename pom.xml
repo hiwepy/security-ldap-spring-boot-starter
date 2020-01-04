@@ -375,10 +375,10 @@
 	
 	<dependencyManagement>
 		<dependencies>
-			<!-- https://github.com/hiwepy/spring-boot-starter-security-biz -->
+			<!-- https://github.com/hiwepy/security-biz-spring-boot-starter -->
 			<dependency>
 				<groupId>com.github.hiwepy</groupId>
-				<artifactId>spring-boot-starter-security-biz</artifactId>
+				<artifactId>security-biz-spring-boot-starter</artifactId>
 				<version>${spring-security-biz.version}</version>
 			</dependency>
 		</dependencies>
@@ -439,7 +439,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.hiwepy</groupId>
-			<artifactId>spring-boot-starter-security-biz</artifactId>
+			<artifactId>security-biz-spring-boot-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
