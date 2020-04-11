@@ -1,6 +1,7 @@
 package org.springframework.security.boot.ldap.authentication;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,8 @@ public class LdapAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
 			retMap.put("successUrl", getDefaultTargetUrl());
 
 			response.setStatus(HttpStatus.OK.value());
-			response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+			response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 			
 			JSONObject.writeJSONString(response.getWriter(), retMap);
 
