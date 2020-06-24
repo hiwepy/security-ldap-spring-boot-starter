@@ -50,7 +50,7 @@ public class SecurityLdapFilterConfiguration {
 	@ConditionalOnProperty(prefix = SecurityLdapProperties.PREFIX, value = "enabled", havingValue = "true")
 	@EnableConfigurationProperties({ SecurityLdapProperties.class, SecurityBizProperties.class })
 	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 5)
-	static class LdapWebSecurityConfigurerAdapter extends SecurityBizConfigurerAdapter {
+	static class LdapWebSecurityConfigurerAdapter extends AbstractSecurityConfigurerAdapter {
 
 	    private final SecurityBizProperties bizProperties;
 	    private final SecurityLdapProperties ldapProperties;
