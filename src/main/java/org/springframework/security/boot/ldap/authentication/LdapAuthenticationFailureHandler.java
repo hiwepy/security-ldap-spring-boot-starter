@@ -80,17 +80,17 @@ public class LdapAuthenticationFailureHandler extends ExceptionMappingAuthentica
 		response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 		
 		if (e instanceof AuthenticationMethodNotSupportedException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_METHOD_NOT_ALLOWED.getCode(), e.getMessage()));
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_METHOD_NOT_ALLOWED.getCode(), e.getMessage()));
 		} else if (e instanceof UsernameNotFoundException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_USER_NOT_FOUND.getCode(),
-					messages.getMessage(AuthResponseCode.SC_USER_NOT_FOUND.getMsgKey(), e.getMessage())));
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_USER_NOT_FOUND.getCode(),
+					messages.getMessage(AuthResponseCode.SC_AUTHC_USER_NOT_FOUND.getMsgKey(), e.getMessage())));
 		} else if (e instanceof BadCredentialsException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_CREDENTIALS_INCORRECT.getCode(),
-					messages.getMessage(AuthResponseCode.SC_CREDENTIALS_INCORRECT.getMsgKey(), e.getMessage())));
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_CREDENTIALS_INCORRECT.getCode(),
+					messages.getMessage(AuthResponseCode.SC_AUTHC_CREDENTIALS_INCORRECT.getMsgKey(), e.getMessage())));
 		} else if (e instanceof AuthenticationCaptchaNotFoundException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_CAPTCHA_REQUIRED.getCode(), e.getMessage()));
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_CAPTCHA_REQUIRED.getCode(), e.getMessage()));
 		} else if (e instanceof AuthenticationCaptchaIncorrectException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_CAPTCHA_INCORRECT.getCode(), e.getMessage()));
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_CAPTCHA_INCORRECT.getCode(), e.getMessage()));
 		} else if (e instanceof AuthenticationTokenNotFoundException) {
 			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHZ_TOKEN_REQUIRED.getCode(), e.getMessage()));
 		} else if (e instanceof AuthenticationTokenIncorrectException) {
@@ -98,20 +98,20 @@ public class LdapAuthenticationFailureHandler extends ExceptionMappingAuthentica
 		} else if (e instanceof AuthenticationTokenExpiredException) {
 			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHZ_TOKEN_EXPIRED.getCode(), e.getMessage()));
 		}  else if (e instanceof DisabledException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_USER_DISABLED.getCode(),
-					messages.getMessage(AuthResponseCode.SC_USER_DISABLED.getMsgKey(), e.getMessage())));
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_USER_DISABLED.getCode(),
+					messages.getMessage(AuthResponseCode.SC_AUTHC_USER_DISABLED.getMsgKey(), e.getMessage())));
 		}  else if (e instanceof LockedException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_USER_LOCKED.getCode(),
-					messages.getMessage(AuthResponseCode.SC_USER_LOCKED.getMsgKey(), e.getMessage())));	
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_USER_LOCKED.getCode(),
+					messages.getMessage(AuthResponseCode.SC_AUTHC_USER_LOCKED.getMsgKey(), e.getMessage())));	
 		}  else if (e instanceof AccountExpiredException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_USER_EXPIRED.getCode(),
-					messages.getMessage(AuthResponseCode.SC_USER_EXPIRED.getMsgKey(), e.getMessage())));	
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_USER_EXPIRED.getCode(),
+					messages.getMessage(AuthResponseCode.SC_AUTHC_USER_EXPIRED.getMsgKey(), e.getMessage())));	
 		}  else if (e instanceof CredentialsExpiredException) {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_CREDENTIALS_EXPIRED.getCode(),
-					messages.getMessage(AuthResponseCode.SC_CREDENTIALS_EXPIRED.getMsgKey(), e.getMessage())));	
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_CREDENTIALS_EXPIRED.getCode(),
+					messages.getMessage(AuthResponseCode.SC_AUTHC_CREDENTIALS_EXPIRED.getMsgKey(), e.getMessage())));	
 		} else {
-			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_FAIL.getCode(),
-					messages.getMessage(AuthResponseCode.SC_FAIL.getMsgKey())));
+			JSONObject.writeJSONString(response.getWriter(), AuthResponse.of(AuthResponseCode.SC_AUTHC_FAIL.getCode(),
+					messages.getMessage(AuthResponseCode.SC_AUTHC_FAIL.getMsgKey())));
 		}
 	}
 
