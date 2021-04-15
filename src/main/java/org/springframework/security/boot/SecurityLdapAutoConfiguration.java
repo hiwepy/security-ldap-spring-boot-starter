@@ -250,8 +250,7 @@ public class SecurityLdapAutoConfiguration {
 			SecurityLdapAuthcProperties authcProperties,
 			@Autowired(required = false) List<AuthenticationListener> authenticationListeners,
 			@Qualifier("upcRedirectStrategy") RedirectStrategy redirectStrategy) {
-		LdapAuthenticationFailureHandler failureHandler = new LdapAuthenticationFailureHandler(
-				authenticationListeners, authcProperties.getFailureUrl());
+		LdapAuthenticationFailureHandler failureHandler = new LdapAuthenticationFailureHandler();
 		failureHandler.setAllowSessionCreation(authcProperties.getSessionMgt().isAllowSessionCreation());
 		failureHandler.setRedirectStrategy(redirectStrategy);
 		failureHandler.setUseForward(authcProperties.isUseForward());
