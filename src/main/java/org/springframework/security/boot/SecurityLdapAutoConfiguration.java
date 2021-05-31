@@ -22,6 +22,7 @@ import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrat
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyAuthoritiesMapper;
 import org.springframework.security.boot.biz.authentication.AuthenticationListener;
+import org.springframework.security.boot.biz.property.SecuritySessionMgtProperties;
 import org.springframework.security.boot.ldap.authentication.AuthoritiesMapperPolicy;
 import org.springframework.security.boot.ldap.authentication.DirContextPolicy;
 import org.springframework.security.boot.ldap.authentication.LdapAuthenticationFailureHandler;
@@ -248,6 +249,7 @@ public class SecurityLdapAutoConfiguration {
 	public LdapAuthenticationFailureHandler ldapAuthenticationFailureHandler(
 			SecurityLdapProperties ldapProperties,
 			SecurityLdapAuthcProperties authcProperties,
+			SecuritySessionMgtProperties sessionMgtProperties,
 			@Autowired(required = false) List<AuthenticationListener> authenticationListeners,
 			@Qualifier("upcRedirectStrategy") RedirectStrategy redirectStrategy) {
 		LdapAuthenticationFailureHandler failureHandler = new LdapAuthenticationFailureHandler();
