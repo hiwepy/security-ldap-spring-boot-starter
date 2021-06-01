@@ -17,6 +17,7 @@ import org.springframework.security.boot.biz.authentication.AuthenticationListen
 import org.springframework.security.boot.biz.authentication.PostRequestAuthenticationProcessingFilter;
 import org.springframework.security.boot.biz.authentication.captcha.CaptchaResolver;
 import org.springframework.security.boot.biz.authentication.nested.MatchedAuthenticationEntryPoint;
+import org.springframework.security.boot.biz.property.SecuritySessionMgtProperties;
 import org.springframework.security.boot.ldap.authentication.LadpAuthenticationProcessingFilter;
 import org.springframework.security.boot.ldap.authentication.LdapAuthenticationFailureHandler;
 import org.springframework.security.boot.ldap.authentication.LdapAuthenticationSuccessHandler;
@@ -24,7 +25,6 @@ import org.springframework.security.boot.ldap.property.SecurityLdapAuthcProperti
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.ldap.authentication.AbstractLdapAuthenticationProvider;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -34,8 +34,6 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
 import org.springframework.security.web.savedrequest.RequestCache;
-import org.springframework.security.web.session.InvalidSessionStrategy;
-import org.springframework.security.web.session.SessionInformationExpiredStrategy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -52,26 +50,21 @@ public class SecurityLdapFilterConfiguration {
 	@Order(SecurityProperties.DEFAULT_FILTER_ORDER + 5)
 	static class LdapWebSecurityConfigurerAdapter extends WebSecurityBizConfigurerAdapter {
 
-	    private final SecurityBizProperties bizProperties;
 	    private final SecurityLdapProperties ldapProperties;
 		private final SecurityLdapAuthcProperties authcProperties;
 		
 		private final AuthenticationEntryPoint authenticationEntryPoint;
 	    private final AuthenticationSuccessHandler authenticationSuccessHandler;
 	    private final AuthenticationFailureHandler authenticationFailureHandler;
-	    private final CaptchaResolver captchaResolver;
-	    private final InvalidSessionStrategy invalidSessionStrategy;
-	    private final LogoutHandler logoutHandler;
 	    private final ObjectMapper objectMapper;
     	private final RequestCache requestCache;
     	private final RememberMeServices rememberMeServices;
-    	private final SessionRegistry sessionRegistry;
 		private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
-		private final SessionInformationExpiredStrategy sessionInformationExpiredStrategy;
 		
 		public LdapWebSecurityConfigurerAdapter(
 				
 				SecurityBizProperties bizProperties,
+				SecuritySessionMgtProperties sessionMgtProperties,
 				SecurityLdapProperties ldapProperties,
 				SecurityLdapAuthcProperties authcProperties,
 				
@@ -83,29 +76,24 @@ public class SecurityLdapFilterConfiguration {
    				ObjectProvider<LdapAuthenticationFailureHandler> authenticationFailureHandlerProvider,
    				ObjectProvider<CaptchaResolver> captchaResolverProvider,
    				ObjectProvider<LogoutHandler> logoutHandlerProvider,
-   				ObjectProvider<ObjectMapper> objectMapperProvider
+   				ObjectProvider<ObjectMapper> objectMapperProvider,
+   				ObjectProvider<RememberMeServices> rememberMeServicesProvider
    			
 			) {
 		    
-			super(bizProperties, authcProperties, authenticationProvider.stream().collect(Collectors.toList()),
+			super(bizProperties, authcProperties, sessionMgtProperties, authenticationProvider.stream().collect(Collectors.toList()),
 					authenticationManagerProvider.getIfAvailable());
 			
-			this.bizProperties = bizProperties;
 			this.ldapProperties = ldapProperties;
 			this.authcProperties = authcProperties;
 			
 			this.authenticationEntryPoint = super.authenticationEntryPoint(authenticationEntryPointProvider.stream().collect(Collectors.toList()));
 			this.authenticationSuccessHandler = authenticationSuccessHandlerProvider.getIfAvailable();
    			this.authenticationFailureHandler = authenticationFailureHandlerProvider.getIfAvailable();
-   			this.captchaResolver = captchaResolverProvider.getIfAvailable();
-   			this.invalidSessionStrategy = super.invalidSessionStrategy();
-   			this.logoutHandler = super.logoutHandler(logoutHandlerProvider.stream().collect(Collectors.toList()));
    			this.objectMapper = objectMapperProvider.getIfAvailable();
    			this.requestCache = super.requestCache();
-   			this.rememberMeServices = super.rememberMeServices();
-   			this.sessionRegistry = super.sessionRegistry();
+   			this.rememberMeServices = rememberMeServicesProvider.getIfAvailable();
    			this.sessionAuthenticationStrategy = super.sessionAuthenticationStrategy();
-   			this.sessionInformationExpiredStrategy = super.sessionInformationExpiredStrategy();
    			
 		}
 		
@@ -119,7 +107,7 @@ public class SecurityLdapFilterConfiguration {
 			 */
 			PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
 			
-			map.from(authcProperties.getSessionMgt().isAllowSessionCreation()).to(authenticationFilter::setAllowSessionCreation);
+			map.from(getSessionMgtProperties().isAllowSessionCreation()).to(authenticationFilter::setAllowSessionCreation);
 			
 			map.from(authenticationManagerBean()).to(authenticationFilter::setAuthenticationManager);
 			map.from(authenticationSuccessHandler).to(authenticationFilter::setAuthenticationSuccessHandler);
@@ -134,9 +122,23 @@ public class SecurityLdapFilterConfiguration {
 		
 		@Override
 		public void configure(HttpSecurity http) throws Exception {
-			http.antMatcher(authcProperties.getLoginUrlPatterns())
+			
+			http.requestCache()
+	        	.requestCache(requestCache)
+	        	.and()
+	   	    	.exceptionHandling()
+	        	.authenticationEntryPoint(authenticationEntryPoint)
+	        	.and()
+	        	.httpBasic()
+	        	.disable()
+				.antMatcher(authcProperties.getLoginUrlPatterns())
 				.addFilterBefore(authenticationProcessingFilter(), PostRequestAuthenticationProcessingFilter.class);
-			super.configure(http);
+			
+			super.configure(http, authcProperties.getCors());
+   	    	super.configure(http, authcProperties.getCsrf());
+   	    	super.configure(http, authcProperties.getHeaders());
+	    	super.configure(http);
+			
 		}
 		
 		@Override
